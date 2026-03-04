@@ -12,7 +12,6 @@ class AESCBC
         $cipher = new AES('cbc');
         $cipher->setIV($initVector);
         $cipher->setKey($key);
-        $cipher->disablePadding();
 
         try {
             $result = $cipher->decrypt($payload);
