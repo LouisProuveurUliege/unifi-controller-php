@@ -32,7 +32,6 @@ RUN apk add --no-cache \
     mysql-client
 
 COPY --from=build-snappy /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
-COPY --from=get-controller /usr/src/unifi-controller/ /usr/src/unifi-controller/
 
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
     && php composer-setup.php --install-dir=/usr/local/bin --filename=composer \
@@ -42,6 +41,9 @@ RUN docker-php-ext-enable snappy \
     && docker-php-ext-install gmp pdo_mysql \
     && composer create-project laravel/laravel:^8.0 unifi-controller
 
+
+COPY . /usr/src/unifi-controller
+
 WORKDIR /unifi-controller
 
 RUN composer config repositories.unifi-controller path /usr/src/unifi-controller \
@@ -50,11 +52,6 @@ RUN composer config repositories.unifi-controller path /usr/src/unifi-controller
 COPY entrypoint.sh entrypoint.sh
 RUN chmod +x entrypoint.sh
 
-# Copy Laravel project
-COPY --from=get-controller /usr/src/unifi-controller/ /usr/src/unifi-controller/
-
-# Modify .env with the correct database credentials
-# Should not be done in prod, but would not use "php artisan serve" in prod either
 RUN sed -i \
     -e "s/DB_CONNECTION=.*/DB_CONNECTION=mysql/" \
     -e "s/DB_HOST=.*/DB_HOST=mysql/" \
